@@ -18,6 +18,7 @@ jobs:
   setup:
     name: Setup
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       snapshot-date: ${{ steps.snapshot.outputs.date }}
       snapshot-epoch: ${{ steps.snapshot.outputs.epoch }}
