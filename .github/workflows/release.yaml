@@ -15,7 +15,7 @@ concurrency: release
 
 jobs:
   # ------------------------------------------------------------
-  # Job 1: Snapshot metadata
+  # Job 1: Snapshot metadata + normalized image repo
   # ------------------------------------------------------------
   setup:
     name: Setup
@@ -23,11 +23,13 @@ jobs:
     outputs:
       snapshot-date: ${{ steps.snapshot.outputs.date }}
       snapshot-epoch: ${{ steps.snapshot.outputs.epoch }}
+      image-repo: ${{ steps.snapshot.outputs.image_repo }}
     steps:
       - id: snapshot
         run: |
           echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
           echo "epoch=$(date +%s)" >> $GITHUB_OUTPUT
+          echo "image_repo=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
 
   # ------------------------------------------------------------
   # Job 2: Build & push per-arch images
@@ -70,17 +72,13 @@ jobs:
           config: melange.yaml
           archs: ${{ matrix.arch }}
 
-      - name: Normalize image repository
-        run: |
-          echo "IMAGE_REPO=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
       # --------------------------------------------------------
       # Build OCI image (single arch)
       # --------------------------------------------------------
       - uses: chainguard-images/actions/apko-build@v1.0.11
         with:
           config: apko.yaml
-          tag: ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }}-${{ matrix.tag_suffix }}
+          tag: ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }}-${{ matrix.tag_suffix }}
           keyring-append: melange.rsa.pub
           archs: ${{ matrix.arch }}
           source-date-epoch: ${{ needs.setup.outputs.snapshot-epoch }}
@@ -94,14 +92,14 @@ jobs:
       - name: Push image
         run: |
           docker load < output.tar
-          docker push ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }}-${{ matrix.tag_suffix }}
+          docker push ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }}-${{ matrix.tag_suffix }}
 
   # ------------------------------------------------------------
   # Job 3: Create & push multi-arch manifest
   # ------------------------------------------------------------
   manifest:
     name: Publish multi-arch manifest
-    needs: build
+    needs: [setup, build]
     runs-on: ubuntu-latest
 
     permissions:
@@ -114,23 +112,23 @@ jobs:
 
       - name: Create manifest
         run: |
-          docker manifest create ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }} \
-            ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }}-amd64 \
-            ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }}-arm64 \
-            ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }}-arm
+          docker manifest create ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }} \
+            ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }}-amd64 \
+            ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }}-arm64 \
+            ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }}-arm
 
-          docker manifest annotate ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }} \
-            ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }}-arm \
+          docker manifest annotate ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }} \
+            ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }}-arm \
             --os linux --arch arm --variant v7
 
-          docker manifest push ${{ env.REPO_NAME }}:${{ needs.setup.outputs.snapshot-date }}
+          docker manifest push ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }}
 
   # ------------------------------------------------------------
   # Job 4: Generate README
   # ------------------------------------------------------------
   generate-readme:
     name: Generate README
-    needs: manifest
+    needs: [setup, manifest]
     runs-on: ubuntu-latest
 
     permissions:
@@ -147,6 +145,6 @@ jobs:
         with:
           repo: https://github.com/${{ github.repository }}
           name: ${{ env.REPO_NAME }}
-          location: ${{ env.REPO_NAME }}
+          location: ${{ needs.setup.outputs.image-repo }}
           description: "Hello, world!"
           push-to-repo: true
