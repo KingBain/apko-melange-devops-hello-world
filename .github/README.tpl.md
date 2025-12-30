@@ -24,12 +24,7 @@ docker pull ${IMAGE_REPO}:latest
 | `${TAG}` | `amd64` `arm64` `arm` |
 
 ## Signing
-
-All Chainguard Images are signed using [Sigstore](https://sigstore.dev)!
-
     
-<details>
-<br/>
 To verify the image, download <a href="https://github.com/sigstore/cosign">cosign</a> and run:
 
 ```bash
@@ -38,9 +33,6 @@ cosign verify \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   ${IMAGE_REPO}:${TAG} | jq
 ```
-  
-
-</details>
 
 ## Build
 
