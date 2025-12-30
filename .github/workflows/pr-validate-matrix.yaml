@@ -57,17 +57,6 @@ jobs:
           config: melange.yaml
           archs: ${{ matrix.arch }}
 
-      # Explicitly generate and sign the index for this specific arch.
-      # This is crucial to prevent the "failed to find key name" error in Apko.
-      - name: Sign Index
-        run: |
-          echo "Signing index for ${{ matrix.arch }}..."
-          docker run --rm -v "${PWD}:/work" -w /work \
-            cgr.dev/chainguard/melange index \
-            -o packages/${{ matrix.arch }}/APKINDEX.tar.gz \
-            packages/${{ matrix.arch }}/*.apk \
-            --signing-key melange.rsa
-
       # Build the OCI Image tarball for this specific arch
       - uses: chainguard-images/actions/apko-build@main
         with:
