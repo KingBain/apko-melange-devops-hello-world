@@ -13,17 +13,15 @@ Hello, world!
 The image is available on `ghcr.io`:
 
 ```bash
-docker pull ghcr.io/kingbain/hello-world:20251230
+docker pull ghcr.io/kingbain/hello-world:latest
 ```
 
 ## Supported tags
 
 | Tag | Arch |
 | --- | ---- |
+| `latest` | `amd64` `arm64` `arm` |
 | `20251230` | `amd64` `arm64` `arm` |
-| `20251230-amd64` | `amd64` |
-| `20251230-arm64` | `arm64` |
-| `20251230-arm` | `arm` |
 
 ## Signing
 
