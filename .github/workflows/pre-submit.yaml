@@ -5,43 +5,103 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  build:
-    name: Build hello-world OCI image
+  # ------------------------------------------------------------------
+  # JOB 1: Generate Keys
+  # We do this once so all matrix jobs share the same signing key.
+  # ------------------------------------------------------------------
+  setup:
+    name: Setup & Keygen
     runs-on: ubuntu-latest
+    outputs:
+      snapshot-date: ${{ steps.snapshot-date.outputs.date }}
+      snapshot-epoch: ${{ steps.snapshot-date.outputs.epoch }}
+    steps:
+      - name: Generate snapshot date
+        id: snapshot-date
+        run: |
+          echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
+          echo "epoch=$(date +%s)" >> $GITHUB_OUTPUT
+        shell: bash
 
+      - name: Generate Melange Keypair
+        run: |
+          # Generate keys in the mounted /work directory
+          docker run --rm -v "${PWD}:/work" -w /work cgr.dev/chainguard/melange keygen
+          sudo chown $USER melange.rsa melange.rsa.pub
+
+      - name: Upload Keypair
+        uses: actions/upload-artifact@v4
+        with:
+          name: melange-keys
+          path: |
+            melange.rsa
+            melange.rsa.pub
+          retention-days: 1
+
+  # ------------------------------------------------------------------
+  # JOB 2: Build Matrix
+  # Runs in parallel for each architecture
+  # ------------------------------------------------------------------
+  build:
+    name: Build ${{ matrix.arch }}
+    needs: setup
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64, armv7]
+
     steps:
-    - uses: actions/checkout@v6.0.1
+      - uses: actions/checkout@v4
 
-    - name: Setup QEMU
-      uses: docker/setup-qemu-action@v3.7.0
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2.1.0
 
-    - name: Generate snapshot date
-      id: snapshot-date
-      run: |
-        echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
-      shell: bash
+      - uses: sigstore/cosign-installer@main
 
-    - uses: sigstore/cosign-installer@v4.0.0
+      # Download the key generated in the setup job
+      - name: Download Signing Keys
+        uses: actions/download-artifact@v4
+        with:
+          name: melange-keys
+          path: .
 
-    - uses: chainguard-dev/actions/melange-build@main
-      with:
-        sign-with-temporary-key: true
-        signing-key-path: melange.rsa
-        config: melange.yaml
-        archs: x86_64,aarch64,armv7
+      - name: Fix Key Permissions
+        run: sudo chown $USER melange.rsa melange.rsa.pub
 
-    - uses: chainguard-images/actions/apko-build@main
-      with:
-        config: apko.yaml
-        tag: hello-world:${{ steps.snapshot-date.outputs.date }}
-        keyring-append: melange.rsa.pub
-        archs: x86_64,aarch64,armv7
-        source-date-epoch: ${{ steps.snapshot-date.outputs.epoch }}
+      # Build APKs for the specific matrix architecture
+      - uses: chainguard-dev/actions/melange-build@main
+        with:
+          sign-with-temporary-key: false
+          signing-key-path: melange.rsa
+          config: melange.yaml
+          archs: ${{ matrix.arch }}
 
-    - uses: actions/upload-artifact@v6
-      with:
-        name: hello-world.tar
-        path: ./output.tar
+      # Explicitly generate and sign the index for this specific arch.
+      # This is crucial to prevent the "failed to find key name" error in Apko.
+      - name: Sign Index
+        run: |
+          echo "Signing index for ${{ matrix.arch }}..."
+          docker run --rm -v "${PWD}:/work" -w /work \
+            cgr.dev/chainguard/melange index \
+            -o packages/${{ matrix.arch }}/APKINDEX.tar.gz \
+            packages/${{ matrix.arch }}/*.apk \
+            --signing-key melange.rsa
+
+      # Build the OCI Image tarball for this specific arch
+      - uses: chainguard-images/actions/apko-build@main
+        with:
+          config: apko.yaml
+          tag: hello-world:${{ needs.setup.outputs.snapshot-date }}
+          keyring-append: melange.rsa.pub
+          archs: ${{ matrix.arch }}
+          source-date-epoch: ${{ needs.setup.outputs.snapshot-epoch }}
+
+      # Upload the individual tarball, named by architecture
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-${{ matrix.arch }}.tar
+          path: ./output.tar
