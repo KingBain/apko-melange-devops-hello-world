@@ -14,10 +14,10 @@ jobs:
       security-events: write
 
     steps:
-    - uses: actions/checkout@v6.0.1
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Setup QEMU
-      uses: docker/setup-qemu-action@v3.7.0
+      uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
     - name: Generate snapshot date
       id: snapshot-date
@@ -25,16 +25,16 @@ jobs:
         echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
       shell: bash
 
-    - uses: sigstore/cosign-installer@v4.0.0
+    - uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
 
-    - uses: chainguard-dev/actions/melange-build@v1.5.10
+    - uses: chainguard-dev/actions/melange-build@3e8a2a226fad9e1ecbf2d359b8a7697554a4ac6d # v1.5.10
       with:
         sign-with-temporary-key: true
         signing-key-path: melange.rsa
         config: melange.yaml
         archs: x86_64
 
-    - uses: chainguard-images/actions/apko-build@v1.0.11
+    - uses: chainguard-images/actions/apko-build@95c64af473be476d6169619eb2f372e72b3a1562 # v1.0.11
       with:
         config: apko.yaml
         tag: hello-world:${{ steps.snapshot-date.outputs.date }}
@@ -47,7 +47,7 @@ jobs:
         docker load < output.tar
 
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.33.1
+      uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
       with:
         image-ref: hello-world:${{ steps.snapshot-date.outputs.date }}-amd64
         exit-code: '1'
@@ -59,11 +59,11 @@ jobs:
         output: 'trivy-results.sarif'
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v4.31.9
+      uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4.31.9
       with:
         sarif_file: 'trivy-results.sarif'
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
         name: hello-world.tar
         path: ./output.tar

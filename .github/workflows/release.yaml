@@ -55,16 +55,16 @@ jobs:
           - arch: armv7
             tag_suffix: arm
     steps:
-      - uses: actions/checkout@v6.0.1
-      - uses: docker/setup-qemu-action@v3.7.0
-      - uses: sigstore/cosign-installer@v4.0.0
-      - uses: chainguard-dev/actions/melange-build@v1.5.10
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+      - uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+      - uses: chainguard-dev/actions/melange-build@3e8a2a226fad9e1ecbf2d359b8a7697554a4ac6d # v1.5.10
         with:
           sign-with-temporary-key: true
           signing-key-path: melange.rsa
           config: melange.yaml
           archs: ${{ matrix.arch }}
-      - uses: chainguard-images/actions/apko-build@v1.0.11
+      - uses: chainguard-images/actions/apko-build@95c64af473be476d6169619eb2f372e72b3a1562 # v1.0.11
         with:
           config: apko.yaml
           tag: ${{ needs.setup.outputs.image-repo }}:${{ needs.setup.outputs.snapshot-date }}
@@ -93,7 +93,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: sigstore/cosign-installer@v4.0.0
+      - uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
       - name: Login to GHCR
         run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
@@ -144,7 +144,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6.0.1
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Generate README from template
         env:
           GITHUB_REPO: ${{ github.repository }}
