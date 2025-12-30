@@ -13,17 +13,15 @@ ${DESCRIPTION}
 The image is available on `ghcr.io`:
 
 ```bash
-docker pull ${IMAGE_REPO}:${TAG}
+docker pull ${IMAGE_REPO}:latest
 ```
 
 ## Supported tags
 
 | Tag | Arch |
 | --- | ---- |
+| `latest` | `amd64` `arm64` `arm` |
 | `${TAG}` | `amd64` `arm64` `arm` |
-| `${TAG}-amd64` | `amd64` |
-| `${TAG}-arm64` | `arm64` |
-| `${TAG}-arm` | `arm` |
 
 ## Signing
 
