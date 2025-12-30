@@ -2,10 +2,8 @@
 	"name": "Apko, Melange & Cosign",
 	"image": "mcr.microsoft.com/devcontainers/base:noble",
 	"features": {
-		// Enable Docker-in-Docker so we can run apko/melange containers
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
-		// Install Cosign directly
-		"ghcr.io/devcontainers-contrib/features/cosign:1.0.10": {}
+		"ghcr.io/devcontainers-extra/features/cosign:1": {}
 	},
 	// VS Code Customizations
 	"customizations": {
@@ -18,6 +16,6 @@
 		}
 	},
 	// Make the setup script executable and run it
-	"postCreateCommand": "chmod +x .devcontainer/setup.sh && .devcontainer/setup.sh",
+	"postCreateCommand": ".devcontainer/setup.sh",
 	"remoteUser": "vscode"
 }
