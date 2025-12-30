@@ -1,0 +1,60 @@
+name: PreSubmit-Build 2
+
+on:
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build hello-world OCI image
+    runs-on: ubuntu-latest
+
+    # https://docs.github.com/en/actions/reference/authentication-in-a-workflow
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v2.1.0
+
+    - name: Generate snapshot date
+      id: snapshot-date
+      run: |
+        echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - uses: sigstore/cosign-installer@main
+
+    - name: Generate Melange Keypair
+      run: |
+        # Generate key using the melange container
+        # Added '-w /work' to ensure keys are written to the mounted volume
+        docker run --rm -v "${PWD}:/work" -w /work cgr.dev/chainguard/melange keygen
+        
+        # Ensure the current runner user owns the keys (docker creates them as root)
+        sudo chown $USER melange.rsa melange.rsa.pub
+        
+        # Verify the file exists (for debugging logs)
+        ls -l melange.rsa.pub
+
+    - uses: chainguard-dev/actions/melange-build@main
+      with:
+        sign-with-key: true
+        signing-key-path: ${{ github.workspace }}/melange.rsa
+        config: melange.yaml
+        archs: x86_64
+
+    - uses: chainguard-images/actions/apko-build@main
+      with:
+        config: apko.yaml
+        tag: hello-world:${{ steps.snapshot-date.outputs.date }}
+        keyring-append: /github/workspace/melange.rsa.pub
+        archs: x86_64
+        source-date-epoch: ${{ steps.snapshot-date.outputs.epoch }}
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: hello-world.tar
+        path: ./output.tar
