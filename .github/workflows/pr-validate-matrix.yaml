@@ -23,20 +23,6 @@ jobs:
           echo "epoch=$(date +%s)" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Generate Melange Keypair
-        run: |
-          # Generate keys in the mounted /work directory
-          docker run --rm -v "${PWD}:/work" -w /work cgr.dev/chainguard/melange keygen
-          sudo chown $USER melange.rsa melange.rsa.pub
-
-      - name: Upload Keypair
-        uses: actions/upload-artifact@v4
-        with:
-          name: melange-keys
-          path: |
-            melange.rsa
-            melange.rsa.pub
-          retention-days: 1
 
   # ------------------------------------------------------------------
   # JOB 2: Build Matrix
@@ -62,15 +48,6 @@ jobs:
 
       - uses: sigstore/cosign-installer@main
 
-      # Download the key generated in the setup job
-      - name: Download Signing Keys
-        uses: actions/download-artifact@v4
-        with:
-          name: melange-keys
-          path: .
-
-      - name: Fix Key Permissions
-        run: sudo chown $USER melange.rsa melange.rsa.pub
 
       # Build APKs for the specific matrix architecture
       - uses: chainguard-dev/actions/melange-build@main
