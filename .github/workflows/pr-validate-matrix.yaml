@@ -1,4 +1,4 @@
-name: PR Validate Matrix
+name: PR Validate Multi-Arch Matrix
 
 on:
   pull_request:
