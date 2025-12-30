@@ -10,20 +10,20 @@ ${DESCRIPTION}
 
 ## Get It!
 
-The image is available on \`ghcr.io\`:
+The image is available on `ghcr.io`:
 
-\`\`\`bash
+```bash
 docker pull ${IMAGE_REPO}:${TAG}
-\`\`\`
+```
 
 ## Supported tags
 
 | Tag | Arch |
 | --- | ---- |
-| \`${TAG}\` | \`amd64\` \`arm64\` \`arm\` |
-| \`${TAG}-amd64\` | \`amd64\` |
-| \`${TAG}-arm64\` | \`arm64\` |
-| \`${TAG}-arm\` | \`arm\` |
+| `${TAG}` | `amd64` `arm64` `arm` |
+| `${TAG}-amd64` | `amd64` |
+| `${TAG}-arm64` | `arm64` |
+| `${TAG}-arm` | `arm` |
 
 ## Signing
 
@@ -33,11 +33,11 @@ All Chainguard Images are signed using [Sigstore](https://sigstore.dev)!
 <br/>
 To verify the image, download <a href="https://github.com/sigstore/cosign">cosign</a> and run:
 
-\`\`\`bash
+```bash
 COSIGN_EXPERIMENTAL=1 cosign verify ${IMAGE_REPO}:${TAG} | jq
-\`\`\`
+```
 
-> **Note:** The output will contain the specific digest and signature information for the build timestamped \`${TAG}\`.
+> **Note:** The output will contain the specific digest and signature information for the build timestamped `${TAG}`.
 </details>
 
 ## Build
