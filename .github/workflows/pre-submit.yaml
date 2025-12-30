@@ -31,14 +31,14 @@ jobs:
         sign-with-temporary-key: true
         signing-key-path: melange.rsa
         config: melange.yaml
-        archs: x86_64
+        archs: x86_64,aarch64,armv7
 
     - uses: chainguard-images/actions/apko-build@main
       with:
         config: apko.yaml
         tag: hello-world:${{ steps.snapshot-date.outputs.date }}
         keyring-append: melange.rsa.pub
-        archs: x86_64
+        archs: x86_64,aarch64,armv7
         source-date-epoch: ${{ steps.snapshot-date.outputs.epoch }}
 
     - uses: actions/upload-artifact@v6
