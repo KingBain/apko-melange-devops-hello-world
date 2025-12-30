@@ -41,6 +41,22 @@ jobs:
         archs: x86_64,aarch64,armv7
         source-date-epoch: ${{ steps.snapshot-date.outputs.epoch }}
 
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@v0.33.1
+      with:
+        input: ./output.tar
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@ v4.31.9
+      with:
+        sarif_file: 'trivy-results.sarif'
+
     - uses: actions/upload-artifact@v6
       with:
         name: hello-world.tar

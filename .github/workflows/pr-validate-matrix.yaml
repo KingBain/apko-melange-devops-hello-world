@@ -10,7 +10,7 @@ jobs:
   # We do this once so all matrix jobs share the same signing key.
   # ------------------------------------------------------------------
   setup:
-    name: Setup & Keygen
+    name: Setup
     runs-on: ubuntu-latest
     outputs:
       snapshot-date: ${{ steps.snapshot-date.outputs.date }}
@@ -67,7 +67,7 @@ jobs:
           source-date-epoch: ${{ needs.setup.outputs.snapshot-epoch }}
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           input: ./output.tar
           exit-code: '1'
