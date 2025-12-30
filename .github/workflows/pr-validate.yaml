@@ -26,7 +26,7 @@ jobs:
 
     - uses: sigstore/cosign-installer@v4.0.0
 
-    - uses: chainguard-dev/actions/melange-build@v1.0.11
+    - uses: chainguard-dev/actions/melange-build@v1.5.10
       with:
         sign-with-temporary-key: true
         signing-key-path: melange.rsa
