@@ -66,6 +66,16 @@ jobs:
           archs: ${{ matrix.arch }}
           source-date-epoch: ${{ needs.setup.outputs.snapshot-epoch }}
 
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          input: ./output.tar
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
+
       # Upload the individual tarball, named by architecture
       - uses: actions/upload-artifact@v6
         with:
