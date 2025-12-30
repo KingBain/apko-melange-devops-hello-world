@@ -130,25 +130,29 @@ jobs:
   # ------------------------------------------------------------
   # Job 4: Generate README
   # ------------------------------------------------------------
-  generate-readme:
+generate-readme:
     name: Generate README
     needs: [setup, manifest]
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v6.0.1
 
-      - name: Get repo name
-        run: echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+      - name: Generate README from template
+        env:
+          GITHUB_REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          IMAGE_REPO: ${{ needs.setup.outputs.image-repo }}
+          TAG: ${{ needs.setup.outputs.snapshot-date }}
+          DESCRIPTION: "Hello, world!"
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/workflows/release.yaml"
+        run: |
+          # Read the template, replace variables, overwrite README.md
+          envsubst < .github/README.tpl.md > README.md
 
-      - uses: jdolitsky/readme-generator@main
+      - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          repo: https://github.com/${{ github.repository }}
-          name: ${{ env.REPO_NAME }}
-          location: ${{ needs.setup.outputs.image-repo }}
-          description: "Hello, world!"
-          push-to-repo: true
+          commit_message: "docs: update README for release ${{ needs.setup.outputs.snapshot-date }}"
+          file_pattern: README.md
