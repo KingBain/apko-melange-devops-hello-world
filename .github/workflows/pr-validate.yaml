@@ -1,4 +1,4 @@
-name: PR Validate
+name: PR Validate (x86_64)
 
 on:
   pull_request:
