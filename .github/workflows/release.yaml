@@ -145,7 +145,17 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Convert App token
+        id: create_token 
+        uses: getsentry/action-github-app-token@v3.0.0
+        with:
+          app_id: ${{ vars.APKO_MELANGE_DEVOPS_BOT_ID }}
+          private_key: ${{ secrets.APKO_MELANGE_DEVOPS_BOT_KEY }}
+
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          token: ${{ steps.create_token.outputs.token }}
+
       - name: Generate README from template
         env:
           GITHUB_REPO: ${{ github.repository }}
@@ -155,7 +165,10 @@ jobs:
           DESCRIPTION: "Hello, world!"
           WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/workflows/release.yaml"
         run: envsubst < .github/README.tpl.md > README.md
+        
       - uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
+        env:
+          GITHUB_TOKEN: ${{ steps.create_token.outputs.token }}
         with:
           commit_message: "docs: update README for release ${{ needs.setup.outputs.snapshot-date }}"
           file_pattern: README.md
