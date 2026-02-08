@@ -21,7 +21,7 @@ docker pull ghcr.io/kingbain/apko-melange-devops-hello-world:latest
 | Tag | Arch |
 | --- | ---- |
 | `latest` | `amd64` `arm64` `arm` |
-| `20260207` | `amd64` `arm64` `arm` |
+| `20260208` | `amd64` `arm64` `arm` |
 
 ## Signing
     
@@ -31,7 +31,7 @@ To verify the image, download <a href="https://github.com/sigstore/cosign">cosig
 cosign verify \
   --certificate-identity "https://github.com/KingBain/apko-melange-devops-hello-world/.github/workflows/release.yaml@refs/heads/main" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  ghcr.io/kingbain/apko-melange-devops-hello-world:20260207 | jq
+  ghcr.io/kingbain/apko-melange-devops-hello-world:20260208 | jq
 ```
 
 ## Build
