@@ -28,4 +28,9 @@ environment:
 pipeline:
   - uses: autoconf/make
   - uses: autoconf/make-install
-  - uses: strip
+  - if: ${{build.arch}} != 'armv7'
+    uses: strip
+  - if: ${{build.arch}} == 'armv7'
+    working-directory: ${{targets.contextdir}}
+    runs: |
+      strip -g usr/bin/hello
